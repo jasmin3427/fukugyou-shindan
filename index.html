@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>副業診断アプリ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fff8f3 0%, #ffe8d1 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(255, 150, 100, 0.15);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #FF9F70 0%, #FFB78F 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.95;
+            line-height: 1.5;
+        }
+
+        .content {
+            padding: 30px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ウェルカム画面 */
+        .welcome-screen {
+            text-align: center;
+        }
+
+        .welcome-screen h2 {
+            font-size: 22px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .welcome-screen p {
+            color: #666;
+            line-height: 1.8;
+            margin-bottom: 30px;
+            font-size: 15px;
+        }
+
+        .emoji-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        /* 質問画面 */
+        .question-screen h2 {
+            color: #333;
+            font-size: 18px;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+
+        .question-number {
+            font-size: 12px;
+            color: #FF9F70;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FF9F70, #FFB78F);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 30px;
+        }
+
+        .option {
+            position: relative;
+        }
+
+        .option input[type="radio"] {
+            display: none;
+        }
+
+        .option label {
+            display: flex;
+            align-items: center;
+            padding: 14px 18px;
+            background: #f9f9f9;
+            border: 2px solid #e8e8e8;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 15px;
+            color: #333;
+        }
+
+        .option input[type="radio"]:checked + label {
+            background: linear-gradient(135deg, #FFF0E8, #FFEDE8);
+            border-color: #FF9F70;
+        }
+
+        .option label::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            margin-right: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .option input[type="radio"]:checked + label::before {
+            background: linear-gradient(135deg, #FF9F70, #FFB78F);
+            border-color: #FF9F70;
+            box-shadow: 0 0 0 6px rgba(255, 159, 112, 0.1);
+        }
+
+        /* 結果画面 */
+        .result-screen {
+            text-align: center;
+        }
+
+        .result-emoji {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+
+        .result-type {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .result-description {
+            background: linear-gradient(135deg, #FFF0E8, #FFEDE8);
+            border-left: 4px solid #FF9F70;
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            text-align: left;
+            line-height: 1.8;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .result-section h3 {
+            color: #FF9F70;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+
+        .result-section {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .result-steps {
+            background: #f9f9f9;
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .step-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .step-number {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #FF9F70, #FFB78F);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        /* ボタン */
+        .button {
+            width: 100%;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: auto;
+        }
+
+        .button-primary {
+            background: linear-gradient(135deg, #FF9F70, #FFB78F);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 159, 112, 0.3);
+        }
+
+        .button-primary:active {
+            transform: scale(0.98);
+        }
+
+        .button-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .button-secondary {
+            background: #f0f0f0;
+            color: #333;
+            margin-top: 12px;
+        }
+
+        .button-secondary:active {
+            background: #e0e0e0;
+        }
+
+        /* デスクトップ対応 */
+        @media (min-width: 768px) {
+            .content {
+                min-height: auto;
+            }
+
+            .header h1 {
+                font-size: 32px;
+            }
+
+            .question-screen h2 {
+                font-size: 20px;
+            }
+
+            .result-type {
+                font-size: 28px;
+            }
+        }
+
+        .footer {
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>副業診断</h1>
+            <p>あなたに合った副業タイプを診断します</p>
+        </div>
+
+        <div class="content">
+            <!-- ウェルカム画面 -->
+            <div class="screen active" id="welcome">
+                <div class="welcome-screen">
+                    <div class="emoji-icon">💼</div>
+                    <h2>副業を始めたいあなたへ</h2>
+                    <p>5つの質問に答えることで、あなたの性格や環境に最も合った副業タイプが診断できます。</p>
+                    <p style="font-size: 13px; color: #999; margin-top: 20px;">所要時間：約2分</p>
+                </div>
+            </div>
+
+            <!-- 質問画面 -->
+            <div class="screen" id="questions">
+                <div class="question-number" id="questionNum"></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <h2 id="questionText"></h2>
+                <div class="options" id="optionsContainer"></div>
+            </div>
+
+            <!-- 結果画面 -->
+            <div class="screen" id="result">
+                <div class="result-screen">
+                    <div class="result-emoji" id="resultEmoji"></div>
+                    <div class="result-type" id="resultType"></div>
+                    <div class="result-section">
+                        <h3>特徴</h3>
+                        <div class="result-description" id="resultDescription"></div>
+                    </div>
+                    <div class="result-section">
+                        <h3>おすすめの最初の一歩</h3>
+                        <div class="result-steps" id="resultSteps"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <button class="button button-primary" id="actionButton" style="margin-top: 0; margin-bottom: 0;"></button>
+            <button class="button button-secondary" id="retryButton" style="display: none;"></button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "あなたの性格に最も当てはまるのは？",
+                options: [
+                    { text: "創造的でオリジナリティを活かしたい", value: "creative" },
+                    { text: "コツコツと継続できる努力型", value: "persistent" },
+                    { text: "人と関わることが好き", value: "social" },
+                    { text: "論理的で分析が得意", value: "logical" }
+                ]
+            },
+            {
+                question: "現在の仕事以外に使える時間は？",
+                options: [
+                    { text: "毎日2時間以上", value: "plenty" },
+                    { text: "週末に集中的に", value: "weekends" },
+                    { text: "週に5～10時間程度", value: "moderate" },
+                    { text: "空き時間に少しずつ", value: "little" }
+                ]
+            },
+            {
+                question: "初期投資に使える予算は？",
+                options: [
+                    { text: "10万円以上用意できる", value: "large" },
+                    { text: "5～10万円程度", value: "medium" },
+                    { text: "1万円未満で始めたい", value: "small" },
+                    { text: "無料で始めたい", value: "free" }
+                ]
+            },
+            {
+                question: "既に持っているスキルや知識は？",
+                options: [
+                    { text: "プログラミング・Web技術", value: "tech" },
+                    { text: "ライティング・企画力", value: "creative_skill" },
+                    { text: "営業・マーケティング知識", value: "business" },
+                    { text: "特別なスキルはない", value: "none" }
+                ]
+            },
+            {
+                question: "副業を始める目的は？",
+                options: [
+                    { text: "月10万円以上の安定収入が欲しい", value: "income" },
+                    { text: "好きなことでお金を稼ぎたい", value: "passion" },
+                    { text: "新しいスキルや経験を得たい", value: "skill" },
+                    { text: "まずは少しでも稼ぎたい", value: "start" }
+                ]
+            }
+        ];
+
+        const results = {
+            "creative_persistent_social": {
+                type: "コンテンツクリエイター型",
+                emoji: "🎬",
+                description: "YouTube、TikTok、ブログなど、あなたのオリジナルコンテンツを発信する副業が向いています。創造性と継続力を活かしながら、視聴者とのコミュニケーションも楽しめます。",
+                steps: [
+                    "あなたが得意な分野を決める（美容、ゲーム、教育など）",
+                    "無料で始められるプラットフォームを選ぶ（YouTube、ブログなど）",
+                    "週に2～3本程度、コンテンツを継続発信する",
+                    "3～6ヶ月後に収益化プログラムに申請する"
+                ]
+            },
+            "logical_persistent_tech": {
+                type: "プログラミング・Web制作型",
+                emoji: "💻",
+                description: "プログラミングやWeb制作のスキルを活かして、クライアントのプロジェクトに参加します。時間効率が良く、単価が高いのが特徴です。",
+                steps: [
+                    "ポートフォリオサイトを作成する",
+                    "CrowdWorksやLancersなどのクラウドソーシングに登録",
+                    "小さな案件から始めて実績を積む",
+                    "評価が高まったら、高単価案件に応募する"
+                ]
+            },
+            "social_passionate_business": {
+                type: "SNS・インフルエンサー型",
+                emoji: "📱",
+                description: "InstagramやX（Twitter）などで、あなたの日常や知識を発信し、フォロワーを増やします。商品紹介や広告収入で収益化できます。",
+                steps: [
+                    "得意な分野を決める（ファッション、グルメ、育児など）",
+                    "毎日投稿する習慣をつける",
+                    "フォロワーが1,000人を超えたら、スポンサー企業に提案",
+                    "アフィリエイトリンクを貼って収益化する"
+                ]
+            },
+            "persistent_creative_skill": {
+                type: "ブログ・アフィリエイト型",
+                emoji: "✍️",
+                description: "ブログで有用な情報を発信し、アフィリエイトや広告収入で稼ぐ方法です。時間をかけてコツコツ積み上げるタイプに最適です。",
+                steps: [
+                    "ブログを開設する（無料ブログでもOK）",
+                    "毎週2～3記事を公開する",
+                    "月1万PV達成を目標に記事を書き続ける",
+                    "GoogleアドセンスやASPに登録して収益化"
+                ]
+            },
+            "logical_business_income": {
+                type: "オンライン講師・コンサル型",
+                emoji: "👨‍🏫",
+                description: "あなたの知識やスキルをオンライン講座やコンサルティングで提供します。単価が高く、スキルレバレッジが効きます。",
+                steps: [
+                    "得意分野を絞り込む",
+                    "UdemyやSkillShareで講座を作成",
+                    "SNSで講座の認知を広げる",
+                    "個別コンサルティングに移行して単価を上げる"
+                ]
+            },
+            "social_income_start": {
+                type: "物販・せどり型",
+                emoji: "🛍️",
+                description: "メルカリやAmazonなどで不用品を売ったり、商品を仕入れて転売したりします。回転率が速く、すぐに結果が出やすいです。",
+                steps: [
+                    "自宅の不用品をメルカリに出品する",
+                    "売上から利益が出るコツを学ぶ",
+                    "利益が出たら、安く仕入れて売る循環を作る",
+                    "月5万円程度の利益を目指す"
+                ]
+            },
+            "default": {
+                type: "オールラウンダー型",
+                emoji: "🌟",
+                description: "複数の副業を組み合わせることで、リスク分散と収入の最大化が可能です。まずは自分に合うものから始めてみましょう。",
+                steps: [
+                    "興味のある分野から3つ選ぶ",
+                    "それぞれ2～3週間試してみる",
+                    "最も手応えがあるものに集中する",
+                    "3ヶ月後に別の副業と組み合わせる"
+                ]
+            }
+        };
+
+        let currentQuestion = 0;
+        let answers = {};
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function renderQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('questionNum').textContent = `第${currentQuestion + 1}問 / 5問`;
+            document.getElementById('questionText').textContent = q.question;
+
+            const progress = ((currentQuestion) / questions.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            q.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.innerHTML = `
+                    <input type="radio" id="option${index}" name="question${currentQuestion}" value="${option.value}">
+                    <label for="option${index}">${option.text}</label>
+                `;
+                container.appendChild(optionDiv);
+
+                optionDiv.querySelector('input').addEventListener('change', (e) => {
+                    answers[currentQuestion] = e.target.value;
+                    updateButtonState();
+                });
+            });
+        }
+
+        function updateButtonState() {
+            const button = document.getElementById('actionButton');
+            const hasAnswer = answers[currentQuestion] !== undefined;
+            button.disabled = !hasAnswer;
+        }
+
+        function nextQuestion() {
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                renderQuestion();
+                updateButtonState();
+            } else {
+                showResult();
+            }
+        }
+
+        function getResult() {
+            const answerValues = Object.values(answers);
+            const answerString = answerValues.join('_');
+
+            for (const key in results) {
+                if (key !== 'default' && answerString.includes(key)) {
+                    return results[key];
+                }
+            }
+
+            const patterns = [
+                { keys: ['creative', 'persistent', 'social'], result: results["creative_persistent_social"] },
+                { keys: ['logical', 'persistent', 'tech'], result: results["logical_persistent_tech"] },
+                { keys: ['social', 'passion', 'business'], result: results["social_passionate_business"] },
+                { keys: ['persistent', 'creative_skill'], result: results["persistent_creative_skill"] },
+                { keys: ['tech', 'income'], result: results["logical_business_income"] },
+                { keys: ['social', 'income'], result: results["social_income_start"] }
+            ];
+
+            for (const pattern of patterns) {
+                if (pattern.keys.every(key => answerString.includes(key))) {
+                    return pattern.result;
+                }
+            }
+
+            return results['default'];
+        }
+
+        function showResult() {
+            const result = getResult();
+            document.getElementById('resultEmoji').textContent = result.emoji;
+            document.getElementById('resultType').textContent = result.type;
+            document.getElementById('resultDescription').textContent = result.description;
+
+            const stepsContainer = document.getElementById('resultSteps');
+            stepsContainer.innerHTML = result.steps.map((step, i) => `
+                <div class="step-item">
+                    <div class="step-number">${i + 1}</div>
+                    <div>${step}</div>
+                </div>
+            `).join('');
+
+            showScreen('result');
+            document.getElementById('actionButton').textContent = '診断を終了';
+            document.getElementById('actionButton').disabled = false;
+            document.getElementById('actionButton').onclick = () => location.reload();
+
+            document.getElementById('retryButton').style.display = 'block';
+            document.getElementById('retryButton').textContent = 'もう一度診断する';
+            document.getElementById('retryButton').onclick = () => location.reload();
+        }
+
+        // 初期化
+        document.getElementById('actionButton').textContent = '診断を始める';
+        document.getElementById('actionButton').onclick = () => {
+            currentQuestion = 0;
+            answers = {};
+            renderQuestion();
+            updateButtonState();
+            showScreen('questions');
+            document.getElementById('actionButton').textContent = '次へ';
+            document.getElementById('actionButton').onclick = nextQuestion;
+        };
+    </script>
+</body>
+</html>
